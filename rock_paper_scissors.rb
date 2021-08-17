@@ -1,7 +1,7 @@
 # rock_paper_scissors.rb
 
 class Move
-  VALUES = ['rock', 'paper', 'scissors']
+  VALUES = %w(rock paper scissors).freeze
   def initialize(value)
     @value = value
   end
@@ -19,16 +19,9 @@ class Move
   end
 
   def >(other_move)
-    if rock?
-      return true if other_move.scissors?
-      return false
-    elsif paper?
-      return true if other_move.rock?
-      return false
-    elsif scissors?
-      return true if other_move.paper?
-      return false
-    end
+    rock? && other_move.scissors? ||
+      paper? && other_move.rock? ||
+      scissors? && other_move.paper?
   end
 
   def to_s
@@ -94,10 +87,12 @@ class RPSGame
     puts "Thanks for playing Rock, Paper, Scissors. Good bye!"
   end
 
-  def display_winner
+  def display_moves
     puts "#{human.name} chose #{human.move}"
     puts "#{computer.name} chose #{computer.move}"
+  end
 
+  def display_winner
     if human.move > computer.move
       puts "#{human.name} won!"
     elsif computer.move > human.move
@@ -115,7 +110,9 @@ class RPSGame
       break if ['y', 'n'].include? answer.downcase
       puts "Sorry, must be y or n."
     end
-    answer == 'y' ? true : false
+
+    return true if answer.downcase == 'y'
+    return false if answer.downcase == 'n'
   end
 
   def play
@@ -123,6 +120,7 @@ class RPSGame
     loop do
       human.choose
       computer.choose
+      display_moves
       display_winner
       break unless play_again?
     end
