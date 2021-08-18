@@ -30,10 +30,15 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name
+  attr_accessor :move, :name, :score
 
   def initialize
     set_name
+    @score = 0
+  end
+
+  def increment_score
+    self.score += 1
   end
 end
 
@@ -73,6 +78,7 @@ end
 
 class RPSGame
   attr_accessor :human, :computer
+  WINS_LIMIT = 3
 
   def initialize
     @human = Human.new
@@ -81,6 +87,7 @@ class RPSGame
 
   def display_welcome_message
     puts "Welcome to Rock, Paper, Scissors!"
+    puts "The first to win #{WINS_LIMIT} games is the champion."
   end
 
   def display_goodbye_message
@@ -102,6 +109,20 @@ class RPSGame
     end
   end
 
+  def display_scores
+    puts "#{human.name} has #{human.score} points."
+    puts "#{computer.name} has #{computer.score} points."
+    puts "Remember, the first to #{WINS_LIMIT} is the champion."
+  end
+
+  def update_score
+    if human.move > computer.move
+      human.increment_score
+    elsif computer.move > human.move
+      computer.increment_score
+    end
+  end
+
   def play_again?
     answer = nil
     loop do
@@ -115,14 +136,33 @@ class RPSGame
     return false if answer.downcase == 'n'
   end
 
-  def play
-    display_welcome_message
+  def play_match
     loop do
       human.choose
       computer.choose
+      update_score
       display_moves
       display_winner
+      break if ( human.score >= WINS_LIMIT || computer.score >= WINS_LIMIT )
+      display_scores
+    end
+  end
+
+  def display_match_winner
+    if human.score > computer.score
+      puts "#{human.name} won #{WINS_LIMIT} games and is the CHAMPION!"
+    else
+      puts "#{computer.name} won #{WINS_LIMIT} games and is the CHAMPION!"
+    end
+  end
+
+  def play
+    display_welcome_message
+    loop do
+      play_match
+      display_match_winner
       break unless play_again?
+      human.score, computer.score = 0, 0
     end
     display_goodbye_message
   end
