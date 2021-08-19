@@ -1,6 +1,34 @@
 # rock_paper_scissors.rb
 
+class History
+  attr_accessor :round, :record
+  attr_reader :player_1, :player_2
+
+  def initialize(player_1, player_2)
+    @player_1 = player_1.to_sym
+    @player_2 = player_2.to_sym
+    @round = 1
+    @record = {@player_1 => {round => []}, @player_2 => {round => []}}
+  end
+
+  def round
+    "Round_#{@round}".to_sym
+  end
+
+  def update(player_1_move, player_2_move)
+    record[player_1][round] << player_1_move.value
+    record[player_2][round] << player_2_move.value
+  end
+
+  def set_next_round
+    @round += 1
+    record[player_1][round] = []
+    record[player_2][round] = []
+  end
+end
+
 class Move
+  attr_reader :value
   VALUES = %w(rock paper scissors spock lizard).freeze
   def initialize(value)
     @value = value
@@ -54,6 +82,10 @@ class Player
   def point_string
     self.score == 1 ? "point" : "points"
   end
+
+  def reset_variables
+    self.score = 0
+  end
 end
 
 class Human < Player
@@ -91,17 +123,18 @@ class Computer < Player
 end
 
 class RPSGame
-  attr_accessor :human, :computer
+  attr_reader :human, :computer, :history
   WINS_LIMIT = 3
 
   def initialize
     @human = Human.new
     @computer = Computer.new
+    @history = History.new(human.name, computer.name)
   end
 
   def display_welcome_message
     puts "Welcome to Rock, Paper, Scissors, Spock, Lizard!"
-    puts "The first to win #{WINS_LIMIT} games is the champion."
+    puts "The first to win #{WINS_LIMIT} games is the champion of the round."
   end
 
   def display_goodbye_message
@@ -126,7 +159,7 @@ class RPSGame
   def display_scores
     puts "#{human.name} has #{human.score} #{human.point_string}."
     puts "#{computer.name} has #{computer.score} #{computer.point_string}."
-    puts "Remember, the first to #{WINS_LIMIT} is the champion."
+    puts "Remember, the first to #{WINS_LIMIT} is the champion of the round."
   end
 
   def update_score
@@ -154,6 +187,7 @@ class RPSGame
     loop do
       human.choose
       computer.choose
+      history.update(human.move, computer.move)
       update_score
       display_moves
       display_winner
@@ -164,10 +198,21 @@ class RPSGame
 
   def display_match_winner
     if human.score > computer.score
-      puts "#{human.name} won #{WINS_LIMIT} games and is the CHAMPION!"
+      puts "#{human.name} won #{WINS_LIMIT} games and is the CHAMPION of the round!"
     else
-      puts "#{computer.name} won #{WINS_LIMIT} games and is the CHAMPION!"
+      puts "#{computer.name} won #{WINS_LIMIT} games and is the CHAMPION of the round!"
     end
+  end
+
+  def reset_variables
+    human.score = 0
+    computer.score = 0
+    history.set_next_round
+  end
+
+  def display_move_history
+    puts "These were #{human.name}'s moves: #{history.record["#{human.name}".to_sym]}."
+    puts "These were #{computer.name}'s moves: #{history.record["#{computer.name}".to_sym]}."
   end
 
   def play
@@ -176,8 +221,9 @@ class RPSGame
       play_match
       display_match_winner
       break unless play_again?
-      human.score, computer.score = 0, 0
+      reset_variables
     end
+    display_move_history
     display_goodbye_message
   end
 end
