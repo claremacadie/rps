@@ -1,7 +1,7 @@
 # rock_paper_scissors.rb
 
 class Move
-  VALUES = %w(rock paper scissors).freeze
+  VALUES = %w(rock paper scissors spock lizard).freeze
   def initialize(value)
     @value = value
   end
@@ -18,10 +18,20 @@ class Move
     @value == 'scissors'
   end
 
+  def spock?
+    @value == 'spock'
+  end
+
+  def lizard?
+    @value == 'lizard'
+  end
+
   def >(other_move)
-    rock? && other_move.scissors? ||
-      paper? && other_move.rock? ||
-      scissors? && other_move.paper?
+    rock? && ( other_move.scissors? || other_move.lizard?) ||
+      paper? && ( other_move.rock? || other_move.spock?) ||
+      scissors? && ( other_move.paper? || other_move.lizard? ) ||
+      spock? && ( other_move.rock? || other_move.scissors? ) ||
+      lizard? && ( other_move.paper? || other_move.spock? )
   end
 
   def to_s
@@ -40,6 +50,10 @@ class Player
   def increment_score
     self.score += 1
   end
+
+  def point_string
+    self.score == 1 ? "point" : "points"
+  end
 end
 
 class Human < Player
@@ -57,7 +71,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts "Please choose rock, paper, or scissors:"
+      puts "Please choose rock, paper, scissors, spock or lizard:"
       choice = gets.chomp
       break if Move::VALUES.include?(choice)
       puts "Sorry, invalid choice."
@@ -86,12 +100,12 @@ class RPSGame
   end
 
   def display_welcome_message
-    puts "Welcome to Rock, Paper, Scissors!"
+    puts "Welcome to Rock, Paper, Scissors, Spock, Lizard!"
     puts "The first to win #{WINS_LIMIT} games is the champion."
   end
 
   def display_goodbye_message
-    puts "Thanks for playing Rock, Paper, Scissors. Good bye!"
+    puts "Thanks for playing Rock, Paper, Scissors, Spock, Lizard. Good bye!"
   end
 
   def display_moves
@@ -110,8 +124,8 @@ class RPSGame
   end
 
   def display_scores
-    puts "#{human.name} has #{human.score} points."
-    puts "#{computer.name} has #{computer.score} points."
+    puts "#{human.name} has #{human.score} #{human.point_string}."
+    puts "#{computer.name} has #{computer.score} #{computer.point_string}."
     puts "Remember, the first to #{WINS_LIMIT} is the champion."
   end
 
