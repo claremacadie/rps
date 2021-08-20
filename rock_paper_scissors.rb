@@ -124,7 +124,6 @@ class Human < Player
       break if assign_choice_to_move(choice)
       puts "Sorry, invalid choice."
     end
-    #assign_choice_to_move(choice)
   end
 end
 
@@ -154,6 +153,7 @@ class RPSGame
   WINS_LIMIT = 3
 
   def initialize
+    clear_screen
     @human = Human.new
     @computer = Computer.new
     @history = History.new(human.name, computer.name)
@@ -198,11 +198,11 @@ class RPSGame
   end
 
   def play_again?
-    answer = nil
+    answer = ''
     loop do
       puts "Would you like to play again? (y/n)"
-      answer = gets.chomp
-      break if ['y', 'n'].include? answer.downcase.strip
+      answer = gets.chomp.downcase.strip
+      break if ['y', 'n'].include? answer
       puts "Sorry, must be y or n."
     end
 
@@ -213,6 +213,7 @@ class RPSGame
   def play_match
     loop do
       human.choose
+      clear_screen
       computer.choose
       history.update(human.move, computer.move)
       update_score
@@ -225,9 +226,9 @@ class RPSGame
 
   def display_match_winner
     if human.score > computer.score
-      puts "#{human.name} won #{WINS_LIMIT} games and is the CHAMPION of the round!"
+      puts "#{human.name} won #{WINS_LIMIT} games and is the CHAMPION!"
     else
-      puts "#{computer.name} won #{WINS_LIMIT} games and is the CHAMPION of the round!"
+      puts "#{computer.name} won #{WINS_LIMIT} games and is the CHAMPION!"
     end
   end
 
@@ -237,12 +238,35 @@ class RPSGame
     history.set_next_round
   end
 
+  def show_move_history?
+    clear_screen
+    answer = ''
+    loop do
+      puts "Would you like to see the moves that were made in the game? (y/n)"
+       answer = gets.chomp.downcase.strip
+      break if ['y', 'n'].include? answer
+      puts "Sorry, must be y or n."
+    end
+    return true if answer.downcase == 'y'
+    return false if answer.downcase == 'n'
+  end
+
   def display_move_history
-    puts "These were #{human.name}'s moves: #{history.record["#{human.name}".to_sym]}."
-    puts "These were #{computer.name}'s moves: #{history.record["#{computer.name}".to_sym]}."
+    clear_screen
+    puts "These were #{human.name}'s moves:"
+    puts "#{history.record["#{human.name}".to_sym]}."
+    puts
+    puts "These were #{computer.name}'s moves: "
+    puts "#{history.record["#{computer.name}".to_sym]}."
+    puts
+  end
+
+  def clear_screen
+    system('clear')
   end
 
   def play
+    clear_screen
     display_welcome_message
     loop do
       play_match
@@ -250,7 +274,7 @@ class RPSGame
       break unless play_again?
       reset_variables
     end
-    display_move_history
+    display_move_history if show_move_history? == true
     display_goodbye_message
   end
 end
