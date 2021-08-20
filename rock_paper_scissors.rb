@@ -114,11 +114,22 @@ end
 
 class Computer < Player
   def set_name
-    self.name = ['R2D2', 'Hal', 'CHappie', 'Sonny', 'Number 5'].sample
+    self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
   end
 
   def choose
-    self.move = Move.new(Move::VALUES.sample)
+    case self.name
+    when 'R2D2'
+      self.move = Move.new('rock')
+    when 'Hal'
+      self.move = Move.new(['paper', 'scissors', 'scissors', 'scissors', 'scissors', 'spock', 'lizard'].sample)
+    when 'Chappie'
+      self.move = Move.new(Move::VALUES.sample)
+    when 'Sonny'
+      self.move = Move.new(['rock', 'paper', 'scissors'].sample)
+    when 'Number 5'
+      self.move = Move.new(['spock', 'lizard'].sample)
+    end
   end
 end
 
