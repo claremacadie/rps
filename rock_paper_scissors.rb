@@ -29,7 +29,8 @@ end
 
 class Move
   attr_reader :value
-  VALUES = %w(rock paper scissors spock lizard).freeze
+  VALUES_ABBREVIATIONS = {'r' => 'rock', 'p' => 'paper', 'sc' => 'scissors',
+    'sp' => 'spock', 'l' => 'lizard'}
   def initialize(value)
     @value = value
   end
@@ -93,22 +94,37 @@ class Human < Player
     n = ""
     loop do
       puts "What's your name?"
-      n = gets.chomp
+      n = gets.chomp.strip
       break unless n.empty?
       puts "Sorry, must enter a value."
     end
     self.name = n
   end
 
+  def valid_move?(choice)
+    Move::VALUES_ABBREVIATIONS.keys.include?(choice) ||
+    Move::VALUES_ABBREVIATIONS.values.include?(choice)
+  end
+
+  def assign_choice_to_move(choice)
+    if Move::VALUES_ABBREVIATIONS.values.include?(choice)
+      self.move = Move.new(choice)
+    elsif Move::VALUES_ABBREVIATIONS.keys.include?(choice)
+      self.move = Move.new(Move::VALUES_ABBREVIATIONS[choice])
+    else
+      false
+    end
+  end
+
   def choose
     choice = nil
     loop do
-      puts "Please choose rock, paper, scissors, spock or lizard:"
-      choice = gets.chomp
-      break if Move::VALUES.include?(choice)
+      puts "Please choose (r)ock, (p)aper, (sc)issors, (sp)ock or (l)izard:"
+      choice = gets.chomp.downcase.strip
+      break if assign_choice_to_move(choice)
       puts "Sorry, invalid choice."
     end
-    self.move = Move.new(choice)
+    #assign_choice_to_move(choice)
   end
 end
 
@@ -186,7 +202,7 @@ class RPSGame
     loop do
       puts "Would you like to play again? (y/n)"
       answer = gets.chomp
-      break if ['y', 'n'].include? answer.downcase
+      break if ['y', 'n'].include? answer.downcase.strip
       puts "Sorry, must be y or n."
     end
 
