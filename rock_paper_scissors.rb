@@ -101,11 +101,6 @@ class Human < Player
     self.name = n
   end
 
-  def valid_move?(choice)
-    Move::VALUES_ABBREVIATIONS.keys.include?(choice) ||
-    Move::VALUES_ABBREVIATIONS.values.include?(choice)
-  end
-
   def assign_choice_to_move(choice)
     if Move::VALUES_ABBREVIATIONS.values.include?(choice)
       self.move = Move.new(choice)
@@ -128,8 +123,58 @@ class Human < Player
 end
 
 class Computer < Player
+  attr_reader :personality
+
+  COMPUTERS_ABBREVIATIONS = { 'r' => 'R2D2', 'h' => 'Hal', 'c' =>'Chappie',
+    's' => 'Sonny', 'n' => 'Number 5'}
+
+  COMPUTERS_PERSONALITIES = {
+    'R2D2' => 'is often stuck between their only move and a hard place',
+    'Hal' => 'is partial to a sharp object more than most',
+    'Chappie' => 'is an all-rounder',
+    'Sonny' => 'is a traditionalist',
+    'Number 5' => 'embraces all things new'
+  }
+
+  def initialize
+    super
+    @personality = COMPUTERS_PERSONALITIES[self.name]
+  end
+
+  def assign_opponent(opponent)
+    if COMPUTERS_ABBREVIATIONS.values.include?(opponent)
+      self.name = opponent.capitalize
+    elsif COMPUTERS_ABBREVIATIONS.keys.include?(opponent)
+      self.name = COMPUTERS_ABBREVIATIONS[opponent]
+    else
+      false
+    end
+  end
+
+  def choose_opponent
+    loop do
+      puts "Please choose from (R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5."
+      opponent = gets.chomp.downcase.strip
+      break if assign_opponent(opponent)
+      puts "Sorry, invalid choice."
+    end
+    puts "Your opponent is #{self.name}."
+  end
+
   def set_name
-    self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
+    puts "Would you like to choose your opponent? (y/n)"
+    puts "(An opponent will be chosen at random if you select 'n'."
+    answer = nil
+    loop do
+      answer = gets.chomp.downcase.strip
+      break if ['y', 'n'].include? answer
+      puts "Sorry, must be y or n."
+    end
+    if answer == 'y'
+      choose_opponent
+    else
+      self.name = COMPUTERS_ABBREVIATIONS.values.sample
+    end
   end
 
   def choose
@@ -139,7 +184,7 @@ class Computer < Player
     when 'Hal'
       self.move = Move.new(['paper', 'scissors', 'scissors', 'scissors', 'scissors', 'spock', 'lizard'].sample)
     when 'Chappie'
-      self.move = Move.new(Move::VALUES.sample)
+      self.move = Move.new(Move::VALUES_ABBREVIATIONS.values.sample)
     when 'Sonny'
       self.move = Move.new(['rock', 'paper', 'scissors'].sample)
     when 'Number 5'
@@ -159,10 +204,18 @@ class RPSGame
     @history = History.new(human.name, computer.name)
   end
 
+  def break_line
+    puts "------------------------------------------------------------------"
+  end
+
   def display_welcome_message
     puts "Welcome to Rock, Paper, Scissors, Spock, Lizard!"
     puts "The first to win #{WINS_LIMIT} games is the champion of the round."
-  end
+    break_line
+    puts "You shall be playing against #{computer.name}."
+    puts "#{computer.name} #{computer.personality}."
+    break_line
+    end
 
   def display_goodbye_message
     puts "Thanks for playing Rock, Paper, Scissors, Spock, Lizard. Good bye!"
@@ -181,11 +234,13 @@ class RPSGame
     else
       puts "It's a tie!"
     end
+    break_line
   end
 
   def display_scores
     puts "#{human.name} has #{human.score} #{human.point_string}."
     puts "#{computer.name} has #{computer.score} #{computer.point_string}."
+    break_line
     puts "Remember, the first to #{WINS_LIMIT} is the champion of the round."
   end
 
@@ -206,8 +261,8 @@ class RPSGame
       puts "Sorry, must be y or n."
     end
 
-    return true if answer.downcase == 'y'
-    return false if answer.downcase == 'n'
+    return true if answer == 'y'
+    return false if answer == 'n'
   end
 
   def play_match
@@ -230,6 +285,7 @@ class RPSGame
     else
       puts "#{computer.name} won #{WINS_LIMIT} games and is the CHAMPION!"
     end
+    break_line
   end
 
   def reset_variables
@@ -243,7 +299,7 @@ class RPSGame
     answer = ''
     loop do
       puts "Would you like to see the moves that were made in the game? (y/n)"
-       answer = gets.chomp.downcase.strip
+        answer = gets.chomp.downcase.strip
       break if ['y', 'n'].include? answer
       puts "Sorry, must be y or n."
     end
