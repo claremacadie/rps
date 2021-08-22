@@ -1,7 +1,17 @@
 # rock_paper_scissors.rb
 
+module FormatDisplay
+  def break_line
+    puts "------------------------------------------------------------------"
+  end
+
+  def clear_screen
+    system('clear')
+  end
+end
+
 module Question
-  def yes_no_question(question)
+  def ask_yes_no_question(question)
     answer = ''
     loop do
       puts question
@@ -14,7 +24,7 @@ module Question
     return false if answer == 'n'
   end
 
-  def open_question(question)
+  def ask_open_question(question)
     answer = ""
     loop do
       puts question
@@ -25,7 +35,7 @@ module Question
     answer
   end
 
-  def closed_question(question, options)
+  def ask_closed_question(question, options)
     downcase_options = options.map(&:downcase)
     answer = ''
     loop do
@@ -43,8 +53,8 @@ class History
   attr_reader :player1, :player2
 
   def initialize(player1, player2)
-    @player1 = player1.to_sym
-    @player2 = player2.to_sym
+    @player1 = player1
+    @player2 = player2
     @record = { @player1 => [], @player2 => [] }
   end
 
@@ -54,16 +64,16 @@ class History
   end
 
   def player_record(player)
-    record[player.to_sym].join(", ")
+    record[player].join(", ")
   end
 end
 
 class Move
   attr_reader :value
 
-  VALUES_ABBREVIATIONS = {
-    'r' => 'rock', 'p' => 'paper', 'sc' => 'scissors',
-    'sp' => 'spock', 'l' => 'lizard'
+  MOVES = {
+    'rock' => 'r', 'paper' => 'p', 'scissors' => 'sc',
+    'spock' => 'sp', 'lizard' => 'l'
   }
 
   def initialize(value)
@@ -129,25 +139,27 @@ end
 
 class Human < Player
   def set_name
-    self.name = open_question("What's your name?")
-  end
-
-  def assign_choice_to_move(choice)
-    if Move::VALUES_ABBREVIATIONS.values.include?(choice)
-      self.move = Move.new(choice)
-    elsif Move::VALUES_ABBREVIATIONS.keys.include?(choice)
-      self.move = Move.new(Move::VALUES_ABBREVIATIONS[choice])
-    else
-      false
-    end
+    self.name = ask_open_question("What's your name?")
   end
 
   def choose
-    choice = closed_question(
+    choice = ask_closed_question(
       "Please choose (r)ock, (p)aper, (sc)issors, (sp)ock or (l)izard:",
-      Move::VALUES_ABBREVIATIONS.keys + Move::VALUES_ABBREVIATIONS.values
+      Move::MOVES.keys + Move::MOVES.values
     )
     assign_choice_to_move(choice)
+  end
+
+  private
+
+  def assign_choice_to_move(choice)
+    if Move::MOVES.keys.include?(choice)
+      self.move = Move.new(choice)
+    elsif Move::MOVES.values.include?(choice)
+      self.move = Move.new(Move::MOVES.key(choice))
+    else
+      false
+    end
   end
 end
 
@@ -155,8 +167,8 @@ class Computer < Player
   attr_reader :personality
 
   COMPUTERS_ABBREVIATIONS = {
-    'r' => 'R2D2', 'h' => 'Hal', 'c' => 'Chappie',
-    's' => 'Sonny', 'n' => 'Number 5'
+    'R2D2' => 'r', 'Hal' => 'h', 'Chappie' => 'c',
+    'Sonny' => 's', 'Number 5' => 'n'
   }
 
   COMPUTERS_PERSONALITIES = {
@@ -170,7 +182,7 @@ class Computer < Player
   COMPUTERS_MOVES = {
     'R2D2' => ['rock'],
     'Hal' => ['paper', 'scissors', 'scissors', 'scissors', 'spock', 'lizard'],
-    'Chappie' => Move::VALUES_ABBREVIATIONS.values,
+    'Chappie' => Move::MOVES.keys,
     'Sonny' => ['rock', 'paper', 'scissors'],
     'Number 5' => ['spock', 'lizard']
   }
@@ -180,18 +192,27 @@ class Computer < Player
     @personality = COMPUTERS_PERSONALITIES[name]
   end
 
-  def assign_opponent(opponent)
-    if COMPUTERS_ABBREVIATIONS.values.include?(opponent)
-      self.name = opponent.capitalize
-    elsif COMPUTERS_ABBREVIATIONS.keys.include?(opponent)
-      self.name = COMPUTERS_ABBREVIATIONS[opponent]
+  def set_name
+    answer = ask_yes_no_question(
+      "Would you like to choose your opponent? (y/n) \n" \
+      "(An opponent will be chosen at random if you select 'n')"
+    )
+
+    if answer == true
+      choose_opponent
     else
-      false
+      self.name = COMPUTERS_ABBREVIATIONS.keys.sample
     end
   end
 
+  def choose
+    self.move = Move.new(COMPUTERS_MOVES[name].sample)
+  end
+
+  private
+
   def choose_opponent
-    opponent = closed_question(
+    opponent = ask_closed_question(
       "Please choose from:\n" \
       "(R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
       COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
@@ -201,25 +222,19 @@ class Computer < Player
     puts "Your opponent is #{name}."
   end
 
-  def set_name
-    answer = yes_no_question(
-      "Would you like to choose your opponent? (y/n) \n" \
-      "(An opponent will be chosen at random if you select 'n')"
-    )
-
-    if answer == true
-      choose_opponent
+  def assign_opponent(opponent)
+    if COMPUTERS_ABBREVIATIONS.keys.include?(opponent)
+      self.name = opponent.capitalize
+    elsif COMPUTERS_ABBREVIATIONS.values.include?(opponent)
+      self.name = COMPUTERS_ABBREVIATIONS.key(opponent)
     else
-      self.name = COMPUTERS_ABBREVIATIONS.values.sample
+      false
     end
-  end
-
-  def choose
-    self.move = Move.new(COMPUTERS_MOVES[name].sample)
   end
 end
 
 class RPSGame
+  include FormatDisplay
   include Question
   attr_accessor :computer, :history
   attr_reader :human
@@ -233,9 +248,19 @@ class RPSGame
     @history = History.new(human.name, computer.name)
   end
 
-  def break_line
-    puts "------------------------------------------------------------------"
+  def play
+    loop do
+      display_welcome_message
+      play_match
+      display_match_winner
+      display_move_history if show_move_history? == true
+      break unless play_again?
+      reset_variables
+    end
+    display_goodbye_message
   end
+
+  private
 
   def display_welcome_message
     clear_screen
@@ -247,9 +272,30 @@ class RPSGame
     break_line
   end
 
-  def display_goodbye_message
+  def play_match
+    loop do
+      make_moves
+      update_score
+      display_moves
+      display_winner
+      break if human.score >= WINS_LIMIT || computer.score >= WINS_LIMIT
+      display_scores
+    end
+  end
+
+  def make_moves
+    human.choose
+    computer.choose
+    history.update(human.move, computer.move)
     clear_screen
-    puts "Thank you for playing Rock, Paper, Scissors, Spock, Lizard. Goodbye!"
+  end
+
+  def update_score
+    if human.move > computer.move
+      human.increment_score
+    elsif computer.move > human.move
+      computer.increment_score
+    end
   end
 
   def display_moves
@@ -275,36 +321,6 @@ class RPSGame
     puts "Remember, the first to #{WINS_LIMIT} is the champion."
   end
 
-  def update_score
-    if human.move > computer.move
-      human.increment_score
-    elsif computer.move > human.move
-      computer.increment_score
-    end
-  end
-
-  def play_again?
-    yes_no_question("Would you like to play again? (y/n)")
-  end
-
-  def make_moves
-    human.choose
-    computer.choose
-    history.update(human.move, computer.move)
-    clear_screen
-  end
-
-  def play_match
-    loop do
-      make_moves
-      update_score
-      display_moves
-      display_winner
-      break if human.score >= WINS_LIMIT || computer.score >= WINS_LIMIT
-      display_scores
-    end
-  end
-
   def display_match_winner
     if human.score > computer.score
       puts "#{human.name} won #{WINS_LIMIT} games and is the CHAMPION!"
@@ -314,21 +330,10 @@ class RPSGame
     break_line
   end
 
-  def reset_variables
-    reset_opponent if choose_new_opponent? == true
-    human.score = 0
-    computer.score = 0
-    self.history = History.new(human.name, computer.name)
-  end
-
   def show_move_history?
-    yes_no_question(
+    ask_yes_no_question(
       "Would you like to see the moves that were made in the match? (y/n)"
     )
-  end
-
-  def fetch_history(player)
-    history.player_record(player)
   end
 
   def display_move_history
@@ -341,13 +346,17 @@ class RPSGame
     puts
   end
 
-  def clear_screen
-    system('clear')
+  def fetch_history(player)
+    history.player_record(player)
+  end
+
+  def play_again?
+    ask_yes_no_question("Would you like to play again? (y/n)")
   end
 
   def choose_new_opponent?
-    yes_no_question(
-      "Would you like to choose a new opponent for the next match? (y/n)"
+    ask_yes_no_question(
+      "Would you like a new opponent for the next match? (y/n)"
     )
   end
 
@@ -355,16 +364,16 @@ class RPSGame
     self.computer = Computer.new
   end
 
-  def play
-    loop do
-      display_welcome_message
-      play_match
-      display_match_winner
-      display_move_history if show_move_history? == true
-      break unless play_again?
-      reset_variables
-    end
-    display_goodbye_message
+  def reset_variables
+    reset_opponent if choose_new_opponent? == true
+    human.score = 0
+    computer.score = 0
+    self.history = History.new(human.name, computer.name)
+  end
+
+  def display_goodbye_message
+    clear_screen
+    puts "Thank you for playing Rock, Paper, Scissors, Spock, Lizard. Goodbye!"
   end
 end
 
