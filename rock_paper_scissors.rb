@@ -26,7 +26,7 @@ module Question
   end
 
   def closed_question(question, options)
-    downcase_options = options.map { |option| option.downcase }
+    downcase_options = options.map(&:downcase)
     answer = ''
     loop do
       puts question
@@ -40,24 +40,31 @@ end
 
 class History
   attr_accessor :record
-  attr_reader :player_1, :player_2
+  attr_reader :player1, :player2
 
-  def initialize(player_1, player_2)
-    @player_1 = player_1.to_sym
-    @player_2 = player_2.to_sym
-    @record = {@player_1 => [], @player_2 => []}
+  def initialize(player1, player2)
+    @player1 = player1.to_sym
+    @player2 = player2.to_sym
+    @record = { @player1 => [], @player2 => [] }
   end
 
-  def update(player_1_move, player_2_move)
-    record[player_1] << player_1_move.value
-    record[player_2] << player_2_move.value
+  def update(player1_move, player2_move)
+    record[player1] << player1_move.value
+    record[player2] << player2_move.value
+  end
+
+  def player_record(player)
+    record[player.to_sym].join(", ")
   end
 end
 
 class Move
   attr_reader :value
-  VALUES_ABBREVIATIONS = {'r' => 'rock', 'p' => 'paper', 'sc' => 'scissors',
-    'sp' => 'spock', 'l' => 'lizard'}
+
+  VALUES_ABBREVIATIONS = {
+    'r' => 'rock', 'p' => 'paper', 'sc' => 'scissors',
+    'sp' => 'spock', 'l' => 'lizard'
+  }
 
   def initialize(value)
     @value = value
@@ -84,11 +91,11 @@ class Move
   end
 
   def >(other_move)
-    rock? && ( other_move.scissors? || other_move.lizard?) ||
-      paper? && ( other_move.rock? || other_move.spock?) ||
-      scissors? && ( other_move.paper? || other_move.lizard? ) ||
-      spock? && ( other_move.rock? || other_move.scissors? ) ||
-      lizard? && ( other_move.paper? || other_move.spock? )
+    rock? && (other_move.scissors? || other_move.lizard?) ||
+      paper? && (other_move.rock? || other_move.spock?) ||
+      scissors? && (other_move.paper? || other_move.lizard?) ||
+      spock? && (other_move.rock? || other_move.scissors?) ||
+      lizard? && (other_move.paper? || other_move.spock?)
   end
 
   def to_s
@@ -145,8 +152,10 @@ end
 class Computer < Player
   attr_reader :personality
 
-  COMPUTERS_ABBREVIATIONS = { 'r' => 'R2D2', 'h' => 'Hal', 'c' =>'Chappie',
-    's' => 'Sonny', 'n' => 'Number 5'}
+  COMPUTERS_ABBREVIATIONS = {
+    'r' => 'R2D2', 'h' => 'Hal', 'c' => 'Chappie',
+    's' => 'Sonny', 'n' => 'Number 5'
+  }
 
   COMPUTERS_PERSONALITIES = {
     'R2D2' => 'is always stuck between their move and a hard place',
@@ -158,7 +167,7 @@ class Computer < Player
 
   COMPUTERS_MOVES = {
     'R2D2' => ['rock'],
-    'Hal' => ['paper','scissors', 'scissors', 'scissors', 'spock', 'lizard'],
+    'Hal' => ['paper', 'scissors', 'scissors', 'scissors', 'spock', 'lizard'],
     'Chappie' => Move::VALUES_ABBREVIATIONS.values,
     'Sonny' => ['rock', 'paper', 'scissors'],
     'Number 5' => ['spock', 'lizard']
@@ -166,7 +175,7 @@ class Computer < Player
 
   def initialize
     super
-    @personality = COMPUTERS_PERSONALITIES[self.name]
+    @personality = COMPUTERS_PERSONALITIES[name]
   end
 
   def assign_opponent(opponent)
@@ -181,18 +190,21 @@ class Computer < Player
 
   def choose_opponent
     opponent = closed_question(
-               "Please choose from (R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
-               COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
-               )
+      "Please choose from:\n" \
+      "(R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
+      COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
+    )
+
     assign_opponent(opponent)
-    puts "Your opponent is #{self.name}."
+    puts "Your opponent is #{name}."
   end
 
   def set_name
     answer = yes_no_question(
-             "Would you like to choose your opponent? (y/n) \n" +
-             "(An opponent will be chosen at random if you select 'n'.)"
+      "Would you like to choose your opponent? (y/n) \n" \
+      "(An opponent will be chosen at random if you select 'n'.)"
     )
+
     if answer == true
       choose_opponent
     else
@@ -201,7 +213,7 @@ class Computer < Player
   end
 
   def choose
-    self.move = Move.new(COMPUTERS_MOVES[self.name].sample)
+    self.move = Move.new(COMPUTERS_MOVES[name].sample)
   end
 end
 
@@ -209,6 +221,7 @@ class RPSGame
   include Question
   attr_accessor :computer, :history
   attr_reader :human
+
   WINS_LIMIT = 3
 
   def initialize
@@ -223,6 +236,7 @@ class RPSGame
   end
 
   def display_welcome_message
+    clear_screen
     puts "You are playing Rock, Paper, Scissors, Spock, Lizard!"
     puts "The first to win #{WINS_LIMIT} games is the champion."
     break_line
@@ -271,16 +285,20 @@ class RPSGame
     yes_no_question("Would you like to play again? (y/n)")
   end
 
+  def make_moves
+    human.choose
+    computer.choose
+    history.update(human.move, computer.move)
+    clear_screen
+  end
+
   def play_match
     loop do
-      human.choose
-      clear_screen
-      computer.choose
-      history.update(human.move, computer.move)
+      make_moves
       update_score
       display_moves
       display_winner
-      break if ( human.score >= WINS_LIMIT || computer.score >= WINS_LIMIT )
+      break if human.score >= WINS_LIMIT || computer.score >= WINS_LIMIT
       display_scores
     end
   end
@@ -295,22 +313,25 @@ class RPSGame
   end
 
   def reset_variables
+    reset_opponent if choose_new_opponent? == true
     human.score = 0
     computer.score = 0
     self.history = History.new(human.name, computer.name)
   end
 
   def show_move_history?
-    yes_no_question("Would you like to see the moves that were made in the match? (y/n)")
+    yes_no_question(
+      "Would you like to see the moves that were made in the match? (y/n)"
+    )
   end
 
   def display_move_history
     clear_screen
     puts "These were #{human.name}'s moves:"
-    puts history.record[human.name.to_sym].join(", ")
+    puts history.player_record(human.name)
     puts
     puts "These were #{computer.name}'s moves: "
-    puts history.record[computer.name.to_sym].join(", ")
+    puts history.player_record(computer.name)
     puts
   end
 
@@ -319,7 +340,9 @@ class RPSGame
   end
 
   def choose_new_opponent?
-    yes_no_question("Would you like to choose a new opponent for the next match? (y/n)")
+    yes_no_question(
+      "Would you like to choose a new opponent for the next match? (y/n)"
+    )
   end
 
   def reset_opponent
@@ -328,13 +351,11 @@ class RPSGame
 
   def play
     loop do
-      clear_screen
       display_welcome_message
       play_match
       display_match_winner
       display_move_history if show_move_history? == true
       break unless play_again?
-      reset_opponent if choose_new_opponent? == true
       reset_variables
     end
     display_goodbye_message
