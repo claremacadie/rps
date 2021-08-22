@@ -90,6 +90,7 @@ class Move
     @value == 'lizard'
   end
 
+  # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def >(other_move)
     rock? && (other_move.scissors? || other_move.lizard?) ||
       paper? && (other_move.rock? || other_move.spock?) ||
@@ -97,6 +98,7 @@ class Move
       spock? && (other_move.rock? || other_move.scissors?) ||
       lizard? && (other_move.paper? || other_move.spock?)
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
   def to_s
     @value
@@ -202,7 +204,7 @@ class Computer < Player
   def set_name
     answer = yes_no_question(
       "Would you like to choose your opponent? (y/n) \n" \
-      "(An opponent will be chosen at random if you select 'n'.)"
+      "(An opponent will be chosen at random if you select 'n')"
     )
 
     if answer == true
@@ -325,13 +327,17 @@ class RPSGame
     )
   end
 
+  def fetch_history(player)
+    history.player_record(player)
+  end
+
   def display_move_history
     clear_screen
     puts "These were #{human.name}'s moves:"
-    puts history.player_record(human.name)
+    puts fetch_history(human.name)
     puts
     puts "These were #{computer.name}'s moves: "
-    puts history.player_record(computer.name)
+    puts fetch_history(computer.name)
     puts
   end
 
