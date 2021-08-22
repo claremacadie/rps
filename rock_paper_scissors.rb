@@ -156,6 +156,14 @@ class Computer < Player
     'Number 5' => 'embraces all things new'
   }
 
+  COMPUTERS_MOVES = {
+    'R2D2' => ['rock'],
+    'Hal' => ['paper','scissors', 'scissors', 'scissors', 'spock', 'lizard'],
+    'Chappie' => Move::VALUES_ABBREVIATIONS.values,
+    'Sonny' => ['rock', 'paper', 'scissors'],
+    'Number 5' => ['spock', 'lizard']
+  }
+
   def initialize
     super
     @personality = COMPUTERS_PERSONALITIES[self.name]
@@ -193,18 +201,7 @@ class Computer < Player
   end
 
   def choose
-    case self.name
-    when 'R2D2'
-      self.move = Move.new('rock')
-    when 'Hal'
-      self.move = Move.new(['paper', 'scissors', 'scissors', 'scissors', 'scissors', 'spock', 'lizard'].sample)
-    when 'Chappie'
-      self.move = Move.new(Move::VALUES_ABBREVIATIONS.values.sample)
-    when 'Sonny'
-      self.move = Move.new(['rock', 'paper', 'scissors'].sample)
-    when 'Number 5'
-      self.move = Move.new(['spock', 'lizard'].sample)
-    end
+    self.move = Move.new(COMPUTERS_MOVES[self.name].sample)
   end
 end
 
