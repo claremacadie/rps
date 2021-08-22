@@ -1,5 +1,43 @@
 # rock_paper_scissors.rb
 
+module Question
+  def yes_no_question(question)
+    answer = ''
+    loop do
+      puts question
+      answer = gets.chomp.downcase.strip
+      break if ['y', 'n'].include? answer
+      puts "Sorry, must be y or n."
+    end
+
+    return true if answer == 'y'
+    return false if answer == 'n'
+  end
+
+  def open_question(question)
+    answer = ""
+    loop do
+      puts question
+      answer = gets.chomp.strip
+      break unless answer.empty?
+      puts "Sorry, must enter a value."
+    end
+    answer
+  end
+
+  def closed_question(question, options)
+    downcase_options = options.map { |option| option.downcase }
+    answer = ''
+    loop do
+      puts question
+      answer = gets.chomp.downcase.strip
+      break if downcase_options.include?(answer)
+      puts "Sorry, invalid choice."
+    end
+    answer
+  end
+end
+
 class History
   attr_accessor :record
   attr_reader :player_1, :player_2
@@ -20,6 +58,7 @@ class Move
   attr_reader :value
   VALUES_ABBREVIATIONS = {'r' => 'rock', 'p' => 'paper', 'sc' => 'scissors',
     'sp' => 'spock', 'l' => 'lizard'}
+
   def initialize(value)
     @value = value
   end
@@ -58,6 +97,7 @@ class Move
 end
 
 class Player
+  include Question
   attr_accessor :move, :name, :score
 
   def initialize
@@ -80,14 +120,7 @@ end
 
 class Human < Player
   def set_name
-    n = ""
-    loop do
-      puts "What's your name?"
-      n = gets.chomp.strip
-      break unless n.empty?
-      puts "Sorry, must enter a value."
-    end
-    self.name = n
+    self.name = open_question("What's your name?")
   end
 
   def assign_choice_to_move(choice)
@@ -101,13 +134,11 @@ class Human < Player
   end
 
   def choose
-    choice = nil
-    loop do
-      puts "Please choose (r)ock, (p)aper, (sc)issors, (sp)ock or (l)izard:"
-      choice = gets.chomp.downcase.strip
-      break if assign_choice_to_move(choice)
-      puts "Sorry, invalid choice."
-    end
+    choice = closed_question(
+      "Please choose (r)ock, (p)aper, (sc)issors, (sp)ock or (l)izard:",
+      Move::VALUES_ABBREVIATIONS.keys + Move::VALUES_ABBREVIATIONS.values
+    )
+    assign_choice_to_move(choice)
   end
 end
 
@@ -118,8 +149,8 @@ class Computer < Player
     's' => 'Sonny', 'n' => 'Number 5'}
 
   COMPUTERS_PERSONALITIES = {
-    'R2D2' => 'is often stuck between their only move and a hard place',
-    'Hal' => 'is partial to a sharp object more than most',
+    'R2D2' => 'is always stuck between their move and a hard place',
+    'Hal' => 'is rather partial to a sharp object',
     'Chappie' => 'is an all-rounder',
     'Sonny' => 'is a traditionalist',
     'Number 5' => 'embraces all things new'
@@ -141,25 +172,20 @@ class Computer < Player
   end
 
   def choose_opponent
-    loop do
-      puts "Please choose from (R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5."
-      opponent = gets.chomp.downcase.strip
-      break if assign_opponent(opponent)
-      puts "Sorry, invalid choice."
-    end
+    opponent = closed_question(
+               "Please choose from (R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
+               COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
+               )
+    assign_opponent(opponent)
     puts "Your opponent is #{self.name}."
   end
 
   def set_name
-    puts "Would you like to choose your opponent? (y/n)"
-    puts "(An opponent will be chosen at random if you select 'n'.)"
-    answer = nil
-    loop do
-      answer = gets.chomp.downcase.strip
-      break if ['y', 'n'].include? answer
-      puts "Sorry, must be y or n."
-    end
-    if answer == 'y'
+    answer = yes_no_question(
+             "Would you like to choose your opponent? (y/n) \n" +
+             "(An opponent will be chosen at random if you select 'n'.)"
+    )
+    if answer == true
       choose_opponent
     else
       self.name = COMPUTERS_ABBREVIATIONS.values.sample
@@ -183,6 +209,7 @@ class Computer < Player
 end
 
 class RPSGame
+  include Question
   attr_accessor :computer, :history
   attr_reader :human
   WINS_LIMIT = 3
@@ -209,7 +236,7 @@ class RPSGame
 
   def display_goodbye_message
     clear_screen
-    puts "Thank you for playing Rock, Paper, Scissors, Spock, Lizard. Good bye!"
+    puts "Thank you for playing Rock, Paper, Scissors, Spock, Lizard. Goodbye!"
   end
 
   def display_moves
@@ -244,16 +271,7 @@ class RPSGame
   end
 
   def play_again?
-    answer = ''
-    loop do
-      puts "Would you like to play again? (y/n)"
-      answer = gets.chomp.downcase.strip
-      break if ['y', 'n'].include? answer
-      puts "Sorry, must be y or n."
-    end
-
-    return true if answer == 'y'
-    return false if answer == 'n'
+    yes_no_question("Would you like to play again? (y/n)")
   end
 
   def play_match
@@ -286,15 +304,7 @@ class RPSGame
   end
 
   def show_move_history?
-    answer = ''
-    loop do
-      puts "Would you like to see the moves that were made in the match? (y/n)"
-        answer = gets.chomp.downcase.strip
-      break if ['y', 'n'].include? answer
-      puts "Sorry, must be y or n."
-    end
-    return true if answer.downcase == 'y'
-    return false if answer.downcase == 'n'
+    yes_no_question("Would you like to see the moves that were made in the match? (y/n)")
   end
 
   def display_move_history
@@ -312,15 +322,7 @@ class RPSGame
   end
 
   def choose_new_opponent?
-    answer = ''
-    loop do
-      puts "Would you like to choose a new opponent for the next match? (y/n)"
-        answer = gets.chomp.downcase.strip
-      break if ['y', 'n'].include? answer
-      puts "Sorry, must be y or n."
-    end
-    return true if answer.downcase == 'y'
-    return false if answer.downcase == 'n'
+    yes_no_question("Would you like to choose a new opponent for the next match? (y/n)")
   end
 
   def reset_opponent
