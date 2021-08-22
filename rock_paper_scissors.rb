@@ -1,29 +1,18 @@
 # rock_paper_scissors.rb
 
 class History
-  attr_accessor :round, :record
+  attr_accessor :record
   attr_reader :player_1, :player_2
 
   def initialize(player_1, player_2)
     @player_1 = player_1.to_sym
     @player_2 = player_2.to_sym
-    @round = 1
-    @record = {@player_1 => {round => []}, @player_2 => {round => []}}
-  end
-
-  def round
-    "Round_#{@round}".to_sym
+    @record = {@player_1 => [], @player_2 => []}
   end
 
   def update(player_1_move, player_2_move)
-    record[player_1][round] << player_1_move.value
-    record[player_2][round] << player_2_move.value
-  end
-
-  def set_next_round
-    @round += 1
-    record[player_1][round] = []
-    record[player_2][round] = []
+    record[player_1] << player_1_move.value
+    record[player_2] << player_2_move.value
   end
 end
 
@@ -163,7 +152,7 @@ class Computer < Player
 
   def set_name
     puts "Would you like to choose your opponent? (y/n)"
-    puts "(An opponent will be chosen at random if you select 'n'."
+    puts "(An opponent will be chosen at random if you select 'n'.)"
     answer = nil
     loop do
       answer = gets.chomp.downcase.strip
@@ -194,7 +183,8 @@ class Computer < Player
 end
 
 class RPSGame
-  attr_reader :human, :computer, :history
+  attr_accessor :computer, :history
+  attr_reader :human
   WINS_LIMIT = 3
 
   def initialize
@@ -209,16 +199,17 @@ class RPSGame
   end
 
   def display_welcome_message
-    puts "Welcome to Rock, Paper, Scissors, Spock, Lizard!"
-    puts "The first to win #{WINS_LIMIT} games is the champion of the round."
+    puts "You are playing Rock, Paper, Scissors, Spock, Lizard!"
+    puts "The first to win #{WINS_LIMIT} games is the champion."
     break_line
     puts "You shall be playing against #{computer.name}."
     puts "#{computer.name} #{computer.personality}."
     break_line
-    end
+  end
 
   def display_goodbye_message
-    puts "Thanks for playing Rock, Paper, Scissors, Spock, Lizard. Good bye!"
+    clear_screen
+    puts "Thank you for playing Rock, Paper, Scissors, Spock, Lizard. Good bye!"
   end
 
   def display_moves
@@ -241,7 +232,7 @@ class RPSGame
     puts "#{human.name} has #{human.score} #{human.point_string}."
     puts "#{computer.name} has #{computer.score} #{computer.point_string}."
     break_line
-    puts "Remember, the first to #{WINS_LIMIT} is the champion of the round."
+    puts "Remember, the first to #{WINS_LIMIT} is the champion."
   end
 
   def update_score
@@ -291,14 +282,13 @@ class RPSGame
   def reset_variables
     human.score = 0
     computer.score = 0
-    history.set_next_round
+    self.history = History.new(human.name, computer.name)
   end
 
   def show_move_history?
-    clear_screen
     answer = ''
     loop do
-      puts "Would you like to see the moves that were made in the game? (y/n)"
+      puts "Would you like to see the moves that were made in the match? (y/n)"
         answer = gets.chomp.downcase.strip
       break if ['y', 'n'].include? answer
       puts "Sorry, must be y or n."
@@ -310,10 +300,10 @@ class RPSGame
   def display_move_history
     clear_screen
     puts "These were #{human.name}'s moves:"
-    puts "#{history.record["#{human.name}".to_sym]}."
+    puts history.record[human.name.to_sym].join(", ")
     puts
     puts "These were #{computer.name}'s moves: "
-    puts "#{history.record["#{computer.name}".to_sym]}."
+    puts history.record[computer.name.to_sym].join(", ")
     puts
   end
 
@@ -321,16 +311,33 @@ class RPSGame
     system('clear')
   end
 
-  def play
-    clear_screen
-    display_welcome_message
+  def choose_new_opponent?
+    answer = ''
     loop do
+      puts "Would you like to choose a new opponent for the next match? (y/n)"
+        answer = gets.chomp.downcase.strip
+      break if ['y', 'n'].include? answer
+      puts "Sorry, must be y or n."
+    end
+    return true if answer.downcase == 'y'
+    return false if answer.downcase == 'n'
+  end
+
+  def reset_opponent
+    self.computer = Computer.new
+  end
+
+  def play
+    loop do
+      clear_screen
+      display_welcome_message
       play_match
       display_match_winner
+      display_move_history if show_move_history? == true
       break unless play_again?
+      reset_opponent if choose_new_opponent? == true
       reset_variables
     end
-    display_move_history if show_move_history? == true
     display_goodbye_message
   end
 end
