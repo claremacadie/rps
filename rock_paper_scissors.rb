@@ -16,12 +16,12 @@ module Question
     loop do
       puts question
       answer = gets.chomp.downcase.strip
-      break if ['y', 'n'].include? answer
+      break if ['y', 'yes', 'n', 'no'].include? answer
       puts "Sorry, must be y or n."
     end
 
-    return true if answer == 'y'
-    return false if answer == 'n'
+    return true if answer[0] == 'y'
+    return false if answer[0] == 'n'
   end
 
   def ask_open_question(question)
@@ -239,10 +239,12 @@ class RPSGame
   attr_accessor :computer, :history
   attr_reader :human
 
-  WINS_LIMIT = 3
+  WINS_LIMIT = 10
 
   def initialize
     clear_screen
+    display_welcome_message
+    display_rules if show_rules? == true
     @human = Human.new
     @computer = Computer.new
     @history = History.new(human.name, computer.name)
@@ -250,7 +252,7 @@ class RPSGame
 
   def play
     loop do
-      display_welcome_message
+      display_opening
       play_match
       display_match_winner
       display_move_history if show_move_history? == true
@@ -264,11 +266,28 @@ class RPSGame
 
   def display_welcome_message
     clear_screen
-    puts "You are playing Rock, Paper, Scissors, Spock, Lizard!"
+    puts "Welcome to Rock, Paper, Scissors, Spock, Lizard!"
+  end
+
+  def display_opening
+    clear_screen
+    puts "You are playing Rock, Paper, Scissors, Spock, Lizard."
     puts "The first to win #{WINS_LIMIT} games is the champion."
     break_line
     puts "You shall be playing against #{computer.name}."
     puts "#{computer.name} #{computer.personality}."
+    break_line
+  end
+
+  def show_rules?
+    ask_yes_no_question("Would you like to see the rules? (y/n)")
+  end
+
+  def display_rules
+    break_line
+    puts "Scissors cuts Paper covers Rock crushes Lizard poisons Spock \n" \
+      "smashes Scissors decapitates Lizard eats Paper disproves Spock \n" \
+      "vaporizes Rock crushes Scissors."
     break_line
   end
 
