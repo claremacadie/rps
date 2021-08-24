@@ -56,9 +56,9 @@ class History
     @record = []
   end
 
-  def update(player_move)
-    record << player_move.name
-  end
+  # def update(player_move)
+  #   record << player_move.name
+  # end
 end
 
 class Move
@@ -148,10 +148,6 @@ class Player
 
   def point_string
     self.score == 1 ? "point" : "points"
-  end
-
-  def reset_variables
-    self.score = 0
   end
 end
 
@@ -342,8 +338,6 @@ class RPSGame
       update_score
       display_moves
       display_winner
-      human.score
-      computer.score
       break if human.score >= WINS_LIMIT || computer.score >= WINS_LIMIT
       display_scores
     end
@@ -357,8 +351,8 @@ class RPSGame
   end
 
   def update_history
-    human.history.update(human.move)
-    computer.history.update(computer.move)
+    human.history.record << human.move
+    computer.history.record << computer.move
   end
 
   def update_score
@@ -409,16 +403,17 @@ class RPSGame
 
   def display_move_history
     clear_screen
-    puts "These were #{human.name}'s moves:"
-    puts human.history
+    puts "These were the moves for each round:"
     puts
-    puts "These were #{computer.name}'s moves: "
-    puts computer.history
+    puts "#{human.name}        #{computer.name}".center(30)
+    fetch_history
     puts
   end
 
-  def fetch_history(player)
-    history.player_record(player)
+  def fetch_history
+    human.history.record.each_with_index do |move, idx|
+      puts "#{move}          #{computer.history.record[idx]}".center(30)
+    end
   end
 
   def play_again?
@@ -435,8 +430,8 @@ class RPSGame
     set_opponent if choose_new_opponent?
     human.score = 0
     computer.score = 0
-    human.history = []
-    computer.history = []
+    human.history.record = []
+    computer.history.record = []
   end
 
   def display_goodbye_message
