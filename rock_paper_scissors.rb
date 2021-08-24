@@ -188,71 +188,56 @@ class Human < Player
 end
 
 class Computer < Player
-  attr_reader :personality
-
-  COMPUTERS_ABBREVIATIONS = {
-    'R2D2' => 'r', 'Hal' => 'h', 'Chappie' => 'c',
-    'Sonny' => 's', 'Number 5' => 'n'
-  }
-
-  COMPUTERS_PERSONALITIES = {
-    'R2D2' => 'is always stuck between their move and a hard place',
-    'Hal' => 'is rather partial to a sharp object',
-    'Chappie' => 'is an all-rounder',
-    'Sonny' => 'is a traditionalist',
-    'Number 5' => 'embraces all things new'
-  }
-
-  COMPUTERS_MOVES = {
-    'R2D2' => ['rock'],
-    'Hal' => ['paper', 'scissors', 'scissors', 'scissors', 'spock', 'lizard'],
-    'Chappie' => Move::MOVES.keys,
-    'Sonny' => ['rock', 'paper', 'scissors'],
-    'Number 5' => ['spock', 'lizard']
-  }
-
-  def initialize
-    super
-    @personality = COMPUTERS_PERSONALITIES[name]
-  end
-
-  def set_name
-    answer = ask_yes_no_question(
-      "Would you like to choose your opponent? (y/n) \n" \
-      "(An opponent will be chosen at random if you select 'n')"
-    )
-
-    if answer == true
-      choose_opponent
-    else
-      self.name = COMPUTERS_ABBREVIATIONS.keys.sample
-    end
-  end
+  attr_reader :personality, :moves
 
   def choose
-    move_subclass = COMPUTERS_MOVES[name].sample.capitalize
+    move_subclass = moves.sample.capitalize
     self.move = Kernel.const_get(move_subclass).new
   end
+end
 
-  private
-
-  def choose_opponent
-    opponent = ask_closed_question(
-      "Please choose from:\n" \
-      "(R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
-      COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
-    )
-
-    assign_opponent(opponent)
-    puts "Your opponent is #{name}."
+class R2D2 < Computer
+  def initialize
+    @name = 'R2D2'
+    @personality = 'is always stuck between their move and a hard place'
+    @moves = ['rock']
+    @score = 0
   end
+end
 
-  def assign_opponent(opponent)
-    self.name = if opponent.size == 1
-                  COMPUTERS_ABBREVIATIONS.key(opponent)
-                else
-                  opponent.capitalize
-                end
+class Hal < Computer
+  def initialize
+    @name = 'Hal'
+    @personality = 'is rather partial to a sharp object'
+    @moves = ['paper', 'scissors', 'scissors', 'scissors', 'spock', 'lizard']
+    @score = 0
+  end
+end
+
+class Chappie < Computer
+  def initialize
+    @name = 'Chappie'
+    @personality = 'is an all-rounder'
+    @moves = Move::MOVES.keys
+    @score = 0
+  end
+end
+
+class Sonny < Computer
+  def initialize
+    @name = 'Sonny'
+    @personality = 'is a traditionalist'
+    @moves = ['rock', 'paper', 'scissors']
+    @score = 0
+  end
+end
+
+class Number5 < Computer
+  def initialize
+    @name = 'Number 5'
+    @personality = 'embraces all things new'
+    @moves = ['spock', 'lizard']
+    @score = 0
   end
 end
 
@@ -263,13 +248,17 @@ class RPSGame
   attr_reader :human
 
   WINS_LIMIT = 10
+  COMPUTERS_ABBREVIATIONS = {
+    'R2D2' => 'r', 'Hal' => 'h', 'Chappie' => 'c',
+    'Sonny' => 's', 'Number5' => 'n'
+  }
 
   def initialize
     clear_screen
     display_welcome_message
-    display_rules if show_rules? == true
+    display_rules if show_rules?
     @human = Human.new
-    @computer = Computer.new
+    set_opponent
     @history = History.new(human.name, computer.name)
   end
 
@@ -278,7 +267,7 @@ class RPSGame
       display_opening
       play_match
       display_match_winner
-      display_move_history if show_move_history? == true
+      display_move_history if show_move_history?
       break unless play_again?
       reset_variables
     end
@@ -290,16 +279,6 @@ class RPSGame
   def display_welcome_message
     clear_screen
     puts "Welcome to Rock, Paper, Scissors, Spock, Lizard!"
-  end
-
-  def display_opening
-    clear_screen
-    puts "You are playing Rock, Paper, Scissors, Spock, Lizard."
-    puts "The first to win #{WINS_LIMIT} games is the champion."
-    break_line
-    puts "You shall be playing against #{computer.name}."
-    puts "#{computer.name} #{computer.personality}."
-    break_line
   end
 
   def show_rules?
@@ -314,12 +293,58 @@ class RPSGame
     break_line
   end
 
+  def set_opponent
+    answer = ask_yes_no_question(
+      "Would you like to choose your opponent? (y/n) \n" \
+      "(An opponent will be chosen at random if you select 'n')"
+    )
+
+    if answer
+      choose_opponent
+    else
+      computer = COMPUTERS_ABBREVIATIONS.keys.sample
+      @computer = Kernel.const_get(computer).new
+    end
+  end
+
+  def choose_opponent
+    opponent = ask_closed_question(
+      "Please choose from:\n" \
+      "(R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
+      COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
+    )
+
+    assign_opponent(opponent)
+    puts "Your opponent is #{computer.name}."
+  end
+
+  def assign_opponent(opponent)
+    computer = if opponent.size == 1
+                 COMPUTERS_ABBREVIATIONS.key(opponent)
+               else
+                 opponent.capitalize
+               end
+    @computer = Kernel.const_get(computer).new
+  end
+
+  def display_opening
+    clear_screen
+    puts "You are playing Rock, Paper, Scissors, Spock, Lizard."
+    puts "The first to win #{WINS_LIMIT} games is the champion."
+    break_line
+    puts "You shall be playing against #{computer.name}."
+    puts "#{computer.name} #{computer.personality}."
+    break_line
+  end
+
   def play_match
     loop do
       make_moves
       update_score
       display_moves
       display_winner
+      human.score
+      computer.score
       break if human.score >= WINS_LIMIT || computer.score >= WINS_LIMIT
       display_scores
     end
@@ -402,12 +427,8 @@ class RPSGame
     )
   end
 
-  def reset_opponent
-    self.computer = Computer.new
-  end
-
   def reset_variables
-    reset_opponent if choose_new_opponent? == true
+    set_opponent if choose_new_opponent? == true
     human.score = 0
     computer.score = 0
     self.history = History.new(human.name, computer.name)
