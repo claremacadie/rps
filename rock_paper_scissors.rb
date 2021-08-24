@@ -1,6 +1,6 @@
 # rock_paper_scissors.rb
 
-module FormatDisplay
+module Formattable
   def break_line
     puts "------------------------------------------------------------------"
   end
@@ -10,18 +10,18 @@ module FormatDisplay
   end
 end
 
-module Question
+module Questionable
+  YES_NO_OPTIONS = %w(y yes n no)
   def ask_yes_no_question(question)
     answer = ''
     loop do
       puts question
       answer = gets.chomp.downcase.strip
-      break if ['y', 'yes', 'n', 'no'].include? answer
+      break if YES_NO_OPTIONS.include? answer
       puts "Sorry, must be y or n."
     end
 
-    return true if answer[0] == 'y'
-    return false if answer[0] == 'n'
+    answer[0] == 'y'
   end
 
   def ask_open_question(question)
@@ -116,7 +116,7 @@ class Move
 end
 
 class Player
-  include Question
+  include Questionable
   attr_accessor :move, :name, :score
 
   def initialize
@@ -232,8 +232,8 @@ class Computer < Player
 end
 
 class RPSGame
-  include FormatDisplay
-  include Question
+  include Formattable
+  include Questionable
   attr_accessor :computer, :history
   attr_reader :human
 
