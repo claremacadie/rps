@@ -25,13 +25,13 @@ module Questionable
     answer[0] == 'y'
   end
 
-  def ask_open_question(question)
+  def ask_open_question(question, char_limit)
     answer = ""
     loop do
       puts question
       answer = gets.chomp.strip
-      break unless answer.empty?
-      puts "Sorry, must enter a value."
+      break unless answer.empty? || answer.size > char_limit
+      puts "Sorry, must enter a value and it must be less than 15 characters."
     end
     answer
   end
@@ -153,7 +153,7 @@ end
 
 class Human < Player
   def initialize
-    @name = ask_open_question("What's your name?")
+    @name = ask_open_question("What's your name?", 15)
     super
   end
 
@@ -405,14 +405,14 @@ class RPSGame
     clear_screen
     puts "These were the moves for each round:"
     puts
-    puts "#{human.name}        #{computer.name}".center(30)
+    puts "#{human.name.ljust(20)}#{computer.name}"
     fetch_history
     puts
   end
 
   def fetch_history
     human.history.record.each_with_index do |move, idx|
-      puts "#{move}          #{computer.history.record[idx]}".center(30)
+      puts "#{move.to_s.ljust(20)}#{computer.history.record[idx]}"
     end
   end
 
