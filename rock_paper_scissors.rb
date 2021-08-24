@@ -59,8 +59,8 @@ class History
   end
 
   def update(player1_move, player2_move)
-    record[player1] << player1_move.value
-    record[player2] << player2_move.value
+    record[player1] << player1_move.name
+    record[player2] << player2_move.name
   end
 
   def player_record(player)
@@ -69,49 +69,74 @@ class History
 end
 
 class Move
-  attr_reader :value
+  attr_reader :name, :beats
 
   MOVES = {
     'rock' => 'r', 'paper' => 'p', 'scissors' => 'sc',
     'spock' => 'sp', 'lizard' => 'l'
   }
 
-  def initialize(value)
-    @value = value
-  end
-
   def rock?
-    @value == 'rock'
+    @name == 'rock'
   end
 
   def paper?
-    @value == 'paper'
+    @name == 'paper'
   end
 
   def scissors?
-    @value == 'scissors'
+    @name == 'scissors'
   end
 
   def spock?
-    @value == 'spock'
+    @name == 'spock'
   end
 
   def lizard?
-    @value == 'lizard'
+    @name == 'lizard'
   end
 
-  # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def >(other_move)
-    rock? && (other_move.scissors? || other_move.lizard?) ||
-      paper? && (other_move.rock? || other_move.spock?) ||
-      scissors? && (other_move.paper? || other_move.lizard?) ||
-      spock? && (other_move.rock? || other_move.scissors?) ||
-      lizard? && (other_move.paper? || other_move.spock?)
+    beats.include?(other_move.name)
   end
-  # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
   def to_s
-    @value
+    @name
+  end
+end
+
+class Rock < Move
+  def initialize
+    @name = "rock"
+    @beats = ["scissors", "lizard"]
+  end
+end
+
+class Paper < Move
+  def initialize
+    @name = "paper"
+    @beats = ["rock", "spock"]
+  end
+end
+
+class Scissors < Move
+  def initialize
+    @name = "scissors"
+    @beats = ["paper", "lizard"]
+  end
+end
+
+class Spock < Move
+  def initialize
+    @name = "spock"
+    @beats = ["rock", "scissors"]
+  end
+end
+
+class Lizard < Move
+  def initialize
+    @name = "lizard"
+    @beats = ["paper", "spock"]
   end
 end
 
@@ -153,13 +178,12 @@ class Human < Player
   private
 
   def assign_choice_to_move(choice)
-    if Move::MOVES.keys.include?(choice)
-      self.move = Move.new(choice)
-    elsif Move::MOVES.values.include?(choice)
-      self.move = Move.new(Move::MOVES.key(choice))
-    else
-      false
-    end
+    move_subclass = if Move::MOVES.keys.include?(choice)
+                      choice.capitalize
+                    else
+                      Move::MOVES.key(choice).capitalize
+                    end
+    self.move = Kernel.const_get(move_subclass).new
   end
 end
 
@@ -206,7 +230,8 @@ class Computer < Player
   end
 
   def choose
-    self.move = Move.new(COMPUTERS_MOVES[name].sample)
+    move_subclass = COMPUTERS_MOVES[name].sample.capitalize
+    self.move = Kernel.const_get(move_subclass).new
   end
 
   private
