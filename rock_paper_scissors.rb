@@ -25,7 +25,7 @@ module Questionable
     answer[0] == 'y'
   end
 
-  def ask_open_question(question, char_limit)
+  def ask_open_question(question, char_limit = 0)
     answer = ""
     loop do
       puts question
@@ -405,14 +405,17 @@ class RPSGame
     clear_screen
     puts "These were the moves for each round:"
     puts
-    puts "#{human.name.ljust(20)}#{computer.name}"
+    puts "Round".ljust(12) + " #{human.name.ljust(20)} #{computer.name}"
     fetch_history
     puts
   end
 
   def fetch_history
-    human.history.record.each_with_index do |move, idx|
-      puts "#{move.to_s.ljust(20)}#{computer.history.record[idx]}"
+    h_hist = human.history.record
+    c_hist = computer.history.record
+
+    h_hist.each_with_index do |move, idx|
+      puts "#{idx.to_s.ljust(12)} #{move.to_s.ljust(20)} #{c_hist[idx]}"
     end
   end
 
