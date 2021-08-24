@@ -51,21 +51,13 @@ end
 
 class History
   attr_accessor :record
-  attr_reader :player1, :player2
 
-  def initialize(player1, player2)
-    @player1 = player1
-    @player2 = player2
-    @record = { @player1 => [], @player2 => [] }
+  def initialize
+    @record = []
   end
 
-  def update(player1_move, player2_move)
-    record[player1] << player1_move.name
-    record[player2] << player2_move.name
-  end
-
-  def player_record(player)
-    record[player].join(", ")
+  def update(player_move)
+    record << player_move.name
   end
 end
 
@@ -143,11 +135,11 @@ end
 
 class Player
   include Questionable
-  attr_accessor :move, :name, :score
+  attr_accessor :move, :name, :score, :history
 
   def initialize
-    set_name
     @score = 0
+    @history = History.new
   end
 
   def increment_score
@@ -164,8 +156,9 @@ class Player
 end
 
 class Human < Player
-  def set_name
-    self.name = ask_open_question("What's your name?")
+  def initialize
+    @name = ask_open_question("What's your name?")
+    super
   end
 
   def choose
@@ -191,6 +184,10 @@ end
 class Computer < Player
   attr_reader :personality, :moves
 
+  def initialize
+    super
+  end
+
   def choose
     move_subclass = moves.sample.capitalize
     self.move = Kernel.const_get(move_subclass).new
@@ -202,7 +199,7 @@ class R2D2 < Computer
     @name = 'R2D2'
     @personality = 'is always stuck between their move and a hard place'
     @moves = ['rock']
-    @score = 0
+    super
   end
 end
 
@@ -211,7 +208,7 @@ class Hal < Computer
     @name = 'Hal'
     @personality = 'is rather partial to a sharp object'
     @moves = ['paper', 'scissors', 'scissors', 'scissors', 'spock', 'lizard']
-    @score = 0
+    super
   end
 end
 
@@ -220,7 +217,7 @@ class Chappie < Computer
     @name = 'Chappie'
     @personality = 'is an all-rounder'
     @moves = Move::MOVES.keys
-    @score = 0
+    super
   end
 end
 
@@ -229,7 +226,7 @@ class Sonny < Computer
     @name = 'Sonny'
     @personality = 'is a traditionalist'
     @moves = ['rock', 'paper', 'scissors']
-    @score = 0
+    super
   end
 end
 
@@ -238,14 +235,14 @@ class Number5 < Computer
     @name = 'Number 5'
     @personality = 'embraces all things new'
     @moves = ['spock', 'lizard']
-    @score = 0
+    super
   end
 end
 
 class RPSGame
   include Formattable
   include Questionable
-  attr_accessor :computer, :history
+  attr_accessor :computer
   attr_reader :human
 
   WINS_LIMIT = 10
@@ -260,7 +257,6 @@ class RPSGame
     display_rules if show_rules?
     @human = Human.new
     set_opponent
-    @history = History.new(human.name, computer.name)
   end
 
   def play
@@ -356,8 +352,13 @@ class RPSGame
   def make_moves
     human.choose
     computer.choose
-    history.update(human.move, computer.move)
+    update_history
     clear_screen
+  end
+
+  def update_history
+    human.history.update(human.move)
+    computer.history.update(computer.move)
   end
 
   def update_score
@@ -409,10 +410,10 @@ class RPSGame
   def display_move_history
     clear_screen
     puts "These were #{human.name}'s moves:"
-    puts fetch_history(human.name)
+    puts human.history
     puts
     puts "These were #{computer.name}'s moves: "
-    puts fetch_history(computer.name)
+    puts computer.history
     puts
   end
 
@@ -434,7 +435,8 @@ class RPSGame
     set_opponent if choose_new_opponent?
     human.score = 0
     computer.score = 0
-    self.history = History.new(human.name, computer.name)
+    human.history = []
+    computer.history = []
   end
 
   def display_goodbye_message
