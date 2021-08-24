@@ -12,6 +12,7 @@ end
 
 module Questionable
   YES_NO_OPTIONS = %w(y yes n no)
+
   def ask_yes_no_question(question)
     answer = ''
     loop do
@@ -287,9 +288,11 @@ class RPSGame
 
   def display_rules
     break_line
-    puts "Scissors cuts Paper covers Rock crushes Lizard poisons Spock \n" \
-      "smashes Scissors decapitates Lizard eats Paper disproves Spock \n" \
-      "vaporizes Rock crushes Scissors."
+    puts <<~RULES
+      Scissors cuts Paper covers Rock crushes Lizard poisons Spock
+      smashes Scissors decapitates Lizard eats Paper disproves Spock
+      vaporizes Rock crushes Scissors.
+    RULES
     break_line
   end
 
@@ -428,7 +431,7 @@ class RPSGame
   end
 
   def reset_variables
-    set_opponent if choose_new_opponent? == true
+    set_opponent if choose_new_opponent?
     human.score = 0
     computer.score = 0
     self.history = History.new(human.name, computer.name)
