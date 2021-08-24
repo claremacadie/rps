@@ -223,11 +223,11 @@ class Computer < Player
   end
 
   def assign_opponent(opponent)
-    if COMPUTERS_ABBREVIATIONS.keys.include?(opponent.capitalize)
-      self.name = opponent.capitalize
-    else COMPUTERS_ABBREVIATIONS.values.include?(opponent)
-      self.name = COMPUTERS_ABBREVIATIONS.key(opponent)
-    end
+    self.name = if opponent.size == 1
+                  COMPUTERS_ABBREVIATIONS.key(opponent)
+                else
+                  opponent.capitalize
+                end
   end
 end
 
