@@ -21,7 +21,6 @@ module Questionable
       break if YES_NO_OPTIONS.include? answer
       puts "Sorry, must be y or n."
     end
-
     answer[0] == 'y'
   end
 
@@ -131,7 +130,8 @@ end
 
 class Player
   include Questionable
-  attr_accessor :move, :name, :score, :history
+  attr_reader :name
+  attr_accessor :move, :score, :history
 
   def initialize
     @score = 0
@@ -175,10 +175,6 @@ end
 
 class Computer < Player
   attr_reader :personality, :moves
-
-  def initialize
-    super
-  end
 
   def choose
     move_subclass = moves.sample.capitalize
@@ -234,8 +230,8 @@ end
 class RPSGame
   include Formattable
   include Questionable
-  attr_accessor :computer
-  attr_reader :human
+  # attr_accessor :computer
+  attr_reader :human, :computer
 
   WINS_LIMIT = 10
   COMPUTERS_ABBREVIATIONS = {
