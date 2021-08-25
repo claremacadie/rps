@@ -230,7 +230,6 @@ end
 class RPSGame
   include Formattable
   include Questionable
-  # attr_accessor :computer
   attr_reader :human, :computer
 
   WINS_LIMIT = 10
