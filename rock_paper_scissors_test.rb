@@ -186,7 +186,7 @@ class Computer < Player
   end
 end
 
-class R2d2 < Computer
+class R2D2 < Computer
   def initialize
     @name = 'R2D2'
     @personality = 'is always stuck between their move and a hard place'
@@ -304,6 +304,7 @@ class RPSGame
       "(R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
       COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
     )
+
     assign_opponent(opponent)
     puts "Your opponent is #{computer.name}."
   end
