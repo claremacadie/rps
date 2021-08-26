@@ -155,6 +155,7 @@ end
 
 class Computer < Player
   attr_reader :personality, :moves
+
   ABBREVIATIONS = {
     'R2d2' => 'r', 'Hal' => 'h', 'Chappie' => 'c',
     'Sonny' => 's', 'Number5' => 'n'
