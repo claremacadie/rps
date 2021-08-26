@@ -155,6 +155,10 @@ end
 
 class Computer < Player
   attr_reader :personality, :moves
+  ABBREVIATIONS = {
+    'R2d2' => 'r', 'Hal' => 'h', 'Chappie' => 'c',
+    'Sonny' => 's', 'Number5' => 'n'
+  }
 
   def choose
     move_subclass = moves.sample.capitalize
@@ -213,10 +217,6 @@ class RPSGame
   attr_reader :human, :computer
 
   WINS_LIMIT = 10
-  COMPUTERS_ABBREVIATIONS = {
-    'R2D2' => 'r', 'Hal' => 'h', 'Chappie' => 'c',
-    'Sonny' => 's', 'Number5' => 'n'
-  }
 
   def initialize
     clear_screen
@@ -268,7 +268,7 @@ class RPSGame
     if answer
       choose_opponent
     else
-      computer = COMPUTERS_ABBREVIATIONS.keys.sample
+      computer = Computer::ABBREVIATIONS.keys.sample
       @computer = Kernel.const_get(computer).new
     end
   end
@@ -277,7 +277,7 @@ class RPSGame
     opponent = ask_closed_question(
       "Please choose from:\n" \
       "(R)2D2, (H)al, (C)happie, (S)onny or (N)umber 5.",
-      COMPUTERS_ABBREVIATIONS.keys + COMPUTERS_ABBREVIATIONS.values
+      Computer::ABBREVIATIONS.keys + Computer::ABBREVIATIONS.values
     )
     assign_opponent(opponent)
     puts "Your opponent is #{computer.name}."
@@ -285,7 +285,7 @@ class RPSGame
 
   def assign_opponent(opponent)
     computer = if opponent.size == 1
-                 COMPUTERS_ABBREVIATIONS.key(opponent)
+                 Computer::ABBREVIATIONS.key(opponent)
                else
                  opponent.capitalize
                end
