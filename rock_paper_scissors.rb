@@ -118,6 +118,11 @@ class Player
     @history = History.new
   end
 
+  def choose
+    choice_class = select_move
+    self.move = Kernel.const_get(choice_class).new
+  end
+
   def increment_score
     self.score += 1
   end
@@ -133,7 +138,9 @@ class Human < Player
     super
   end
 
-  def choose
+  private
+
+  def select_move
     choice = ask_closed_question(
       "Please choose (r)ock, (p)aper, (sc)issors, (sp)ock or (l)izard:",
       Move::MOVES.keys + Move::MOVES.values
@@ -141,15 +148,12 @@ class Human < Player
     assign_choice_to_move(choice)
   end
 
-  private
-
   def assign_choice_to_move(choice)
-    move_subclass = if Move::MOVES.keys.include?(choice)
-                      choice.capitalize
-                    else
-                      Move::MOVES.key(choice).capitalize
-                    end
-    self.move = Kernel.const_get(move_subclass).new
+    if Move::MOVES.keys.include?(choice)
+      choice.capitalize
+    else
+      Move::MOVES.key(choice).capitalize
+    end
   end
 end
 
@@ -161,20 +165,14 @@ class Computer < Player
     'Sonny' => 's', 'Number5' => 'n'
   }
 
-  def choose
-    move_subclass = allowed_moves.sample.capitalize
-
-    self.move = Kernel.const_get(move_subclass).new
-  end
-
   private
 
-  def allowed_moves
+  def select_move
     allowed_moves = []
     Move::MOVES.keys.each_with_index do |move, idx|
       move_probability[idx].times { allowed_moves << move }
     end
-    allowed_moves
+    allowed_moves.sample.capitalize
   end
 end
 
@@ -191,7 +189,7 @@ class Hal < Computer
   def initialize
     @name = 'Hal'
     @personality = 'is rather partial to a sharp object'
-    @move_probability = [1, 4, 1, 1, 1]
+    @move_probability = [1, 1, 4, 1, 1]
     super
   end
 end
