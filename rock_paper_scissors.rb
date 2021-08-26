@@ -154,7 +154,7 @@ class Human < Player
 end
 
 class Computer < Player
-  attr_reader :personality, :moves
+  attr_reader :personality, :move_probability
 
   ABBREVIATIONS = {
     'R2d2' => 'r', 'Hal' => 'h', 'Chappie' => 'c',
@@ -162,8 +162,19 @@ class Computer < Player
   }
 
   def choose
-    move_subclass = moves.sample.capitalize
+    move_subclass = allowed_moves.sample.capitalize
+
     self.move = Kernel.const_get(move_subclass).new
+  end
+
+  private
+
+  def allowed_moves
+    allowed_moves = []
+    Move::MOVES.keys.each_with_index do |move, idx|
+      move_probability[idx].times { allowed_moves << move }
+    end
+    allowed_moves
   end
 end
 
@@ -171,7 +182,7 @@ class R2d2 < Computer
   def initialize
     @name = 'R2D2'
     @personality = 'is always stuck between their move and a hard place'
-    @moves = ['rock']
+    @move_probability = [1, 0, 0, 0, 0]
     super
   end
 end
@@ -180,7 +191,7 @@ class Hal < Computer
   def initialize
     @name = 'Hal'
     @personality = 'is rather partial to a sharp object'
-    @moves = ['paper', 'scissors', 'scissors', 'scissors', 'spock', 'lizard']
+    @move_probability = [1, 4, 1, 1, 1]
     super
   end
 end
@@ -189,7 +200,7 @@ class Chappie < Computer
   def initialize
     @name = 'Chappie'
     @personality = 'is an all-rounder'
-    @moves = Move::MOVES.keys
+    @move_probability = [1, 1, 1, 1, 1]
     super
   end
 end
@@ -198,7 +209,7 @@ class Sonny < Computer
   def initialize
     @name = 'Sonny'
     @personality = 'is a traditionalist'
-    @moves = ['rock', 'paper', 'scissors']
+    @move_probability = [1, 1, 1, 0, 0]
     super
   end
 end
@@ -207,7 +218,7 @@ class Number5 < Computer
   def initialize
     @name = 'Number 5'
     @personality = 'embraces all things new'
-    @moves = ['spock', 'lizard']
+    @move_probability = [0, 0, 0, 1, 1]
     super
   end
 end
