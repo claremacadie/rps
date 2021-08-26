@@ -64,26 +64,6 @@ class Move
     'spock' => 'sp', 'lizard' => 'l'
   }
 
-  def rock?
-    @name == 'rock'
-  end
-
-  def paper?
-    @name == 'paper'
-  end
-
-  def scissors?
-    @name == 'scissors'
-  end
-
-  def spock?
-    @name == 'spock'
-  end
-
-  def lizard?
-    @name == 'lizard'
-  end
-
   def >(other_move)
     beats.include?(other_move.name)
   end
