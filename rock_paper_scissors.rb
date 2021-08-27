@@ -54,10 +54,6 @@ class History
   def initialize
     @record = []
   end
-
-  def add_move(move)
-    record << move
-  end
 end
 
 class Move
@@ -115,7 +111,7 @@ end
 class Player
   include Questionable
   attr_reader :name
-  attr_accessor :move, :score, :history
+  attr_accessor :move, :score
 
   def initialize
     @score = 0
@@ -136,25 +132,25 @@ class Player
   end
 
   def fetch_history
-    get_history.record
+    history
   end
 
   def record_move(move)
-    get_history.add_move(move)
+    history << move
   end
 
   def reset_history
-    set_history([])
+    self.history = []
   end
 
   private
 
-  def set_history(new_history)
-    history.record = new_history
+  def history=(new_history)
+    @history.record = new_history
   end
 
-  def get_history
-    history
+  def history
+    @history.record
   end
 end
 
