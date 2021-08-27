@@ -54,6 +54,10 @@ class History
   def initialize
     @record = []
   end
+
+  def add_move(move)
+    record << move
+  end
 end
 
 class Move
@@ -128,7 +132,29 @@ class Player
   end
 
   def point_string
-    self.score == 1 ? "point" : "points"
+    score == 1 ? "point" : "points"
+  end
+
+  def fetch_history
+    get_history.record
+  end
+
+  def record_move(move)
+    get_history.add_move(move)
+  end
+
+  def reset_history
+    set_history([])
+  end
+
+  private
+
+  def set_history(new_history)
+    history.record = new_history
+  end
+
+  def get_history
+    history
   end
 end
 
@@ -331,8 +357,8 @@ class RPSGame
   end
 
   def update_history
-    human.history.record << human.move
-    computer.history.record << computer.move
+    human.record_move(human.move)
+    computer.record_move(computer.move)
   end
 
   def update_score
@@ -386,16 +412,16 @@ class RPSGame
     puts "These were the moves for each round:"
     puts
     puts "Round".ljust(12) + " #{human.name.ljust(20)} #{computer.name}"
-    fetch_history
+    print_history
     puts
   end
 
-  def fetch_history
-    h_hist = human.history.record
-    c_hist = computer.history.record
+  def print_history
+    h_hist = human.fetch_history
+    c_hist = computer.fetch_history
 
     h_hist.each_with_index do |move, idx|
-      puts "#{idx.to_s.ljust(12)} #{move.to_s.ljust(20)} #{c_hist[idx]}"
+      puts "#{(idx + 1).to_s.ljust(12)} #{move.to_s.ljust(20)} #{c_hist[idx]}"
     end
   end
 
@@ -413,8 +439,8 @@ class RPSGame
     set_opponent if choose_new_opponent?
     human.score = 0
     computer.score = 0
-    human.history.record = []
-    computer.history.record = []
+    human.reset_history
+    computer.reset_history
   end
 
   def display_goodbye_message
